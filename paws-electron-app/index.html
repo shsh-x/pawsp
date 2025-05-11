@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Paws</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        <div id="title-bar">
+            <div id="title">Paws (module)</div>
+            <div id="title-bar-btns">
+                <button id="minimize-btn" class="title-bar-btn">-</button>
+                <button id="close-btn" class="title-bar-btn">x</button>
+            </div>
+        </div>
+
+        <div id="main-layout">
+            <div id="nav-bar">
+                <!-- Plugin icons will be dynamically inserted here -->
+                <button id="settings-btn" class="nav-item">settings</button>
+            </div>
+
+            <div id="main-content">
+                <h1>Welcome to Paws!</h1>
+                <p>Select a module from the sidebar to get started.</p>
+                <div id="csharp-logs">
+                    <h3>C# Host Logs:</h3>
+                    <pre id="csharp-log-output"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>

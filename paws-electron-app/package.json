@@ -1,0 +1,85 @@
+{
+  "name": "paws-electron-app",
+  "version": "0.1.0",
+  "description": "Paws - A multitool for osu!",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "osu",
+    "tool",
+    "electron"
+  ],
+  "author": "shxsha",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^36.2.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "electron-store": "^10.0.1",
+    "electron-updater": "^6.3.1"
+  },
+  "build": {
+    "appId": "com.shshx.osupaws",
+    "productName": "Paws smol",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "**/*",
+      "!Paws.DotNet/",
+      "!Paws.DotNet/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../Paws.DotNet/Paws.Host/bin/Release/net8.0/",
+        "to": "Paws.DotNet/Paws.Host",
+        "filter": [
+          "**/*",
+          "!*.pdb"
+        ]
+      },
+      {
+        "from": "../Paws.DotNet/Paws.Host/bin/Release/net8.0/plugins/",
+        "to": "Paws.DotNet/Paws.Host/plugins",
+        "filter": [
+          "**/*",
+          "!*.pdb"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "runAfterFinish": true
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icons_linux"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "shsh-x",
+        "repo": "paws"
+      }
+    ]
+  }
+}

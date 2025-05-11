@@ -1,0 +1,148 @@
+/* Basic Reset & Global Styles */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* A common system font stack */
+    background-color: #1e1e1e; /* Dark background for the app */
+    color: #d4d4d4; /* Light text color */
+    overflow: hidden; /* Prevent scrollbars on the body itself */
+    height: 100vh;
+    width: 100vw;
+}
+
+#app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    border: 1px solid #333; /* Subtle border for the window */
+    box-sizing: border-box;
+    border-radius: 8px; /* Rounded corners for the window */
+    overflow: hidden; /* Clip content to rounded corners */
+}
+
+/* Title Bar */
+#title-bar {
+    height: 28px;
+    background-color: #333333; /* Darker grey for title bar */
+    color: #cccccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 8px;
+    -webkit-app-region: drag; /* Makes the title bar draggable */
+    user-select: none; /* Prevent text selection */
+    flex-shrink: 0; /* Prevent title bar from shrinking */
+    border-top-left-radius: 7px; /* Match app-container radius */
+    border-top-right-radius: 7px;
+}
+
+#title {
+    font-weight: bold;
+    font-size: 13px;
+    margin-left: 5px;
+}
+
+#title-bar-btns {
+    -webkit-app-region: no-drag; /* Buttons should not be draggable */
+}
+
+.title-bar-btn {
+    background: none;
+    border: none;
+    color: #cccccc;
+    font-size: 16px; /* Adjust for better visual balance */
+    padding: 0 10px; /* More clickable area */
+    line-height: 28px; /* Center vertically */
+    cursor: pointer;
+    outline: none;
+}
+.title-bar-btn:hover {
+    background-color: #4f4f4f;
+}
+#close-btn:hover {
+    background-color: #e81123; /* Standard red for close */
+    color: white;
+}
+
+/* Main Layout */
+#main-layout {
+    display: flex;
+    flex-grow: 1; /* Takes remaining vertical space */
+    background-color: #333; /* Slightly lighter than title bar for content area */
+    overflow: hidden; /* Important if main-content overflows */
+}
+
+/* Nav Bar */
+#nav-bar {
+    width: 80px;
+    background-color: #333333; /* Same as title bar for consistency */
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0; /* Prevent navbar from shrinking */
+    border-bottom-left-radius: 7px; /* Match app-container radius */
+}
+
+.nav-item {
+    width: 60px;
+    height: 60px;
+    background-color: #3e3e42; /* Placeholder color for items */
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #b0b0b0;
+    font-size: 10px;
+    cursor: pointer;
+    text-align: center;
+}
+.nav-item.placeholder::before {
+    content: ""; /* Empty for pure placeholder */
+}
+.nav-item:hover {
+    background-color: #4f4f52;
+}
+#settings-btn {
+    margin-top: auto; /* Pushes settings to the bottom */
+    text-transform: lowercase;
+    font-weight: bold;
+}
+
+/* Main Content Area */
+#main-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #1e1e1e; /* Darkest area for focused content */
+    overflow-y: auto; /* Allow scrolling if content exceeds height */
+    border-bottom-right-radius: 7px; /* Match app-container radius */
+    border-top-left-radius: 12px; 
+}
+
+#main-content h1 {
+    margin-top: 0;
+    color: #e0e0e0;
+}
+
+#csharp-logs {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #2a2a2a;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+#csharp-log-output {
+    font-family: monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #a0dda0; /* Greenish for logs */
+}
+#csharp-logs h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #c0c0c0;
+}
