@@ -1,0 +1,9 @@
+{
+  "id": "11223344-5566-7788-99aa-bbccddeeff00",
+  "name": "Dummy Plugin",
+  "version": "0.1.0",
+  "description": "A simple plugin for testing the Paws framework.",
+  "author": "Paws Team",
+  "entryPoint": "Paws.Plugin.Dummy.dll",
+  "ui": null
+}

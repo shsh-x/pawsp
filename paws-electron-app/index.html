@@ -2,6 +2,12 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <!-- 
+      FIX: Added 'connect-src http://localhost:5088' to the policy.
+      This explicitly tells Electron that the UI is allowed to make API calls 
+      to our local C# backend.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://localhost:5088; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-src paws-plugin:">
     <title>Paws</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -17,16 +23,15 @@
 
         <div id="main-layout">
             <div id="nav-bar">
-                <!-- Plugin icons will be dynamically inserted here -->
                 <button id="settings-btn" class="nav-item">settings</button>
             </div>
 
             <div id="main-content">
-                <h1>Welcome to Paws!</h1>
-                <p>Select a module from the sidebar to get started.</p>
-                <div id="csharp-logs">
-                    <h3>C# Host Logs:</h3>
-                    <pre id="csharp-log-output"></pre>
+                <webview id="plugin-webview" style="width:100%; height:100%;"></webview>
+                
+                <div id="welcome-message">
+                    <h1>Welcome to Paws!</h1>
+                    <p>Select a module from the sidebar to get started.</p>
                 </div>
             </div>
         </div>

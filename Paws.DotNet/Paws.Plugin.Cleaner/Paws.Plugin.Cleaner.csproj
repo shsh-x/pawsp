@@ -4,20 +4,42 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PluginId>d92d43f9-30f3-4a97-8a3a-e0a752a3665a</PluginId>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Paws.Core.Abstractions\Paws.Core.Abstractions.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="plugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ui\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
+  <!-- THIS TARGET IS NOW CORRECTED AND SIMPLIFIED -->
   <Target Name="CopyPluginToHost" AfterTargets="Build">
     <PropertyGroup>
-        <HostPluginsDir>$(SolutionDir)Paws.DotNet\Paws.Host\bin\$(Configuration)\$(TargetFramework)\plugins\</HostPluginsDir>
+      <HostPluginsDir>$(SolutionDir)Paws.DotNet\Paws.Host\bin\$(Configuration)\$(TargetFramework)\plugins\$(PluginId)\</HostPluginsDir>
     </PropertyGroup>
-    <MakeDir Directories="$(HostPluginsDir)" Condition="!Exists('$(HostPluginsDir)')" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(HostPluginsDir)" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(HostPluginsDir)" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
-    <Message Text="Copied $(TargetFileName) to $(HostPluginsDir)" Importance="high" />
+    <Message Text="Copying plugin content to $(HostPluginsDir)" Importance="high" />
+
+    <!-- These items represent the files we want to copy from the build output -->
+    <ItemGroup>
+      <PluginDll Include="$(OutDir)$(TargetName).dll" />
+      <PluginPdb Include="$(OutDir)$(TargetName).pdb" Condition="Exists('$(OutDir)$(TargetName).pdb')" />
+      <PluginManifest Include="$(OutDir)plugin.json" />
+      <PluginUiFiles Include="$(OutDir)ui\**\*.*" />
+    </ItemGroup>
+
+    <!-- Copy each part to its correct destination -->
+    <Copy SourceFiles="@(PluginDll)" DestinationFolder="$(HostPluginsDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(PluginPdb)" DestinationFolder="$(HostPluginsDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(PluginManifest)" DestinationFolder="$(HostPluginsDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(PluginUiFiles)" DestinationFolder="$(HostPluginsDir)ui\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

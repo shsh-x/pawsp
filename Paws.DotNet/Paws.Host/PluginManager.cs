@@ -1,72 +1,113 @@
 using Paws.Core.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 
 namespace Paws.Host
 {
     public class PluginManager
     {
         private readonly List<IFunctionalExplicitPlugin> _loadedPlugins = new();
+        private readonly List<PluginManifest> _discoveredPluginManifests = new();
         private readonly IHostServices _hostServices;
         private readonly string _pluginsDirectory;
 
-        public PluginManager(IHostServices hostServices, Microsoft.Extensions.Hosting.IHostEnvironment environment)
+        public PluginManager(IHostServices hostServices)
         {
             _hostServices = hostServices;
-            // In development, plugins might be in a different relative path than in production.
-            // AppContext.BaseDirectory points to bin/Debug/net8.0 for Paws.Host.exe
             _pluginsDirectory = Path.Combine(AppContext.BaseDirectory, "plugins");
-            Directory.CreateDirectory(_pluginsDirectory); // Ensure it exists
+            Directory.CreateDirectory(_pluginsDirectory);
         }
 
-        public void LoadPlugins()
+        public void LoadPlugins(IEnumerable<string> approvedGuids)
         {
-            _hostServices.LogMessage($"Scanning for plugins in: {_pluginsDirectory}", Paws.Core.Abstractions.LogLevel.Information, "PluginManager");
+            var approvedSet = new HashSet<string>(approvedGuids, StringComparer.OrdinalIgnoreCase);
+            _hostServices.LogMessage($"Received {approvedSet.Count} approved plugin GUIDs.", Paws.Core.Abstractions.LogLevel.Information, "PluginManager");
 
-            if (!Directory.Exists(_pluginsDirectory))
-            {
-                _hostServices.LogMessage($"Plugins directory not found: {_pluginsDirectory}", Paws.Core.Abstractions.LogLevel.Warning, "PluginManager");
-                return;
-            }
+            var pluginSubdirectories = Directory.GetDirectories(_pluginsDirectory);
 
-            foreach (var dllFile in Directory.GetFiles(_pluginsDirectory, "*.dll"))
+            foreach (var pluginDir in pluginSubdirectories)
             {
+                var manifestPath = Path.Combine(pluginDir, "plugin.json");
+                if (!File.Exists(manifestPath))
+                {
+                    _hostServices.LogMessage($"Skipping directory '{Path.GetFileName(pluginDir)}' - no plugin.json found.", Paws.Core.Abstractions.LogLevel.Warning, "PluginManager");
+                    continue;
+                }
+
                 try
                 {
-                    var assembly = Assembly.LoadFrom(dllFile);
-                    foreach (var type in assembly.GetTypes())
+                    var manifestJson = File.ReadAllText(manifestPath);
+                    var manifest = JsonSerializer.Deserialize<PluginManifest>(manifestJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (manifest == null || string.IsNullOrEmpty(manifest.EntryPoint) || string.IsNullOrEmpty(manifest.Id))
                     {
-                        if (typeof(IFunctionalExplicitPlugin).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
-                        {
-                            if (Activator.CreateInstance(type) is IFunctionalExplicitPlugin plugin)
-                            {
-                                plugin.Initialize(_hostServices);
-                                _loadedPlugins.Add(plugin);
-                                _hostServices.LogMessage($"Loaded plugin: {plugin.Name} (v{plugin.Version}) from {Path.GetFileName(dllFile)}", Paws.Core.Abstractions.LogLevel.Information, "PluginManager");
-                            }
-                        }
+                        _hostServices.LogMessage($"Invalid or incomplete manifest in '{Path.GetFileName(pluginDir)}'.", Paws.Core.Abstractions.LogLevel.Error, "PluginManager");
+                        continue;
+                    }
+                    
+                    _discoveredPluginManifests.Add(manifest);
+
+                    if (!approvedSet.Contains(manifest.Id))
+                    {
+                        _hostServices.LogMessage($"Plugin '{manifest.Name}' is pending approval.", Paws.Core.Abstractions.LogLevel.Information, "PluginManager");
+                        continue;
+                    }
+                    
+                    var entryPointPath = Path.Combine(pluginDir, manifest.EntryPoint);
+                    if (!File.Exists(entryPointPath)) {
+                        _hostServices.LogMessage($"EntryPoint DLL not found at '{entryPointPath}' for plugin '{manifest.Name}'.", Paws.Core.Abstractions.LogLevel.Error, "PluginManager");
+                        continue;
+                    }
+
+                    var assembly = Assembly.LoadFrom(entryPointPath);
+                    var pluginType = assembly.GetTypes().FirstOrDefault(t => typeof(IFunctionalExplicitPlugin).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+
+                    if (pluginType == null)
+                    {
+                         _hostServices.LogMessage($"No type implementing IFunctionalExplicitPlugin found in '{manifest.EntryPoint}'.", Paws.Core.Abstractions.LogLevel.Error, "PluginManager");
+                         continue;
+                    }
+
+                    if (Activator.CreateInstance(pluginType) is IFunctionalExplicitPlugin plugin)
+                    {
+                        plugin.Initialize(_hostServices);
+                        _loadedPlugins.Add(plugin);
+                        _hostServices.LogMessage($"Loaded approved plugin: {plugin.Name} (v{plugin.Version})", Paws.Core.Abstractions.LogLevel.Information, "PluginManager");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _hostServices.LogMessage($"Error loading plugin from {dllFile}: {ex.Message}", Paws.Core.Abstractions.LogLevel.Error, "PluginManager");
-                    // Consider more detailed logging for ex.ToString() in debug.
+                    _hostServices.LogMessage($"Error loading plugin from '{Path.GetFileName(pluginDir)}': {ex.Message}", Paws.Core.Abstractions.LogLevel.Error, "PluginManager");
                 }
             }
-            _hostServices.LogMessage($"Finished loading plugins. {_loadedPlugins.Count} functional explicit plugins loaded.", Paws.Core.Abstractions.LogLevel.Information, "PluginManager");
+            _hostServices.LogMessage($"Finished processing plugins. {_loadedPlugins.Count} loaded, {_discoveredPluginManifests.Count} discovered.", Paws.Core.Abstractions.LogLevel.Information, "PluginManager");
         }
 
-        public IEnumerable<IFunctionalExplicitPlugin> GetLoadedPlugins()
+        public IEnumerable<IFunctionalExplicitPlugin> GetLoadedPlugins() => _loadedPlugins.AsReadOnly();
+        
+        public IEnumerable<PluginManifest> GetDiscoveredPluginManifests() => _discoveredPluginManifests.AsReadOnly();
+
+        public IEnumerable<PluginManifest> GetPendingPlugins()
         {
-            return _loadedPlugins.AsReadOnly();
+            var loadedGuids = new HashSet<string>(_loadedPlugins.Select(p => p.Id.ToString()), StringComparer.OrdinalIgnoreCase);
+            return _discoveredPluginManifests.Where(m => !loadedGuids.Contains(m.Id));
         }
 
-        public IFunctionalExplicitPlugin? GetPluginById(Guid pluginId)
-        {
-            return _loadedPlugins.FirstOrDefault(p => p.Id == pluginId);
-        }
+        public IFunctionalExplicitPlugin? GetPluginById(Guid pluginId) => _loadedPlugins.FirstOrDefault(p => p.Id == pluginId);
     }
+
+    public record PluginManifest(
+        string Id,
+        string Name,
+        string Version,
+        string EntryPoint,
+        PluginUiManifest? Ui,
+        string? Description, // Nullable for safety
+        string? Author       // Nullable for safety
+    );
+
+    public record PluginUiManifest(
+        string Entry,
+        string Path
+    );
 }

@@ -2,7 +2,13 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <!-- FIX: Added Content Security Policy to the plugin's UI -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' paws-plugin:; style-src 'self' 'unsafe-inline' paws-plugin:; font-src paws-plugin:;">
+    
     <title>Cleaner</title>
+    <!-- Reference the Core UI Kit FIRST -->
+    <link rel="stylesheet" href="paws-plugin://paws-core/uikit.css">
+    <!-- Reference the plugin's own specific styles SECOND -->
     <link rel="stylesheet" href="cleaner.css">
 </head>
 <body>
@@ -79,8 +85,10 @@
                     <div id="progress-bar"></div>
                 </div>
             </div>
-        </div>        
+        </div>
+        <button id="change-folder-btn" title="Change osu! folder">📂</button>
     </div>
+    <!-- The cleaner's own script file -->
     <script src="cleaner.js"></script>
 </body>
 </html>

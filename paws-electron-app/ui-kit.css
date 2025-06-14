@@ -1,0 +1,70 @@
+/* Paws UI Kit v1.0 */
+
+/* :root defines variables for the entire document, making them easy to change. */
+:root {
+    --font-primary: 'Wix Madefor Display', 'Segoe UI', sans-serif;
+    --color-bg-primary: #1e1e1e;
+    --color-bg-card: #3e3e42;
+    --color-bg-input: #2a2a2e;
+    --color-text-primary: #e0e0e0;
+    --color-text-secondary: #c0c0c0;
+    --color-accent-primary: #9f3a55;
+    --color-accent-secondary: #5a4f66;
+    --border-radius-card: 16px;
+    --border-radius-element: 8px;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-primary);
+}
+
+/* --- Generic Component Styles --- */
+.card {
+    background-color: var(--color-bg-card);
+    border-radius: var(--border-radius-card);
+    padding: 10px 16px 13px 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-title {
+    padding-bottom: 22px;
+    margin: auto;
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--color-text-secondary);
+    text-transform: lowercase;
+}
+
+.paws-button {
+    font-family: var(--font-primary);
+    border: none;
+    color: white;
+    padding: 10px;
+    border-radius: var(--border-radius-element);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.paws-button.primary {
+    background-color: var(--color-accent-primary);
+    font-size: 28px;
+    font-weight: bold;
+    text-transform: lowercase;
+}
+.paws-button.secondary {
+    background-color: var(--color-accent-secondary);
+}
+.paws-button:hover { filter: brightness(1.15); }
+.paws-button:disabled {
+    filter: brightness(0.6);
+    color: #aaa;
+    cursor: not-allowed;
+}
