@@ -3,6 +3,9 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { autoUpdater } = require('electron-updater'); // << ADDED
 const log = require('electron-log'); // For better logging from autoUpdater
+const fs = require('node:fs');
+const Store = require('electron-store').default;
+
 
 // Configure electron-log
 log.transports.file.level = 'info';
@@ -12,6 +15,7 @@ autoUpdater.autoDownload = false; // We want to show progress, so we'll trigger 
 autoUpdater.autoInstallOnAppQuit = true; // Default, good.
 
 const isDev = !app.isPackaged;
+const store = new Store();
 
 let mainWindow;
 let splashWindow;
@@ -131,7 +135,18 @@ function startCSharpHost() {
             const logMessage = data.toString();
             log.info(`C# Host STDOUT: ${logMessage.trim()}`);
             if (mainWindow && !mainWindow.isDestroyed()) {
-                mainWindow.webContents.send('csharp-log', logMessage);
+                // Check for our special progress message
+                if (logMessage.includes("[PROGRESS]")) {
+                    const progressMatch = logMessage.match(/\[PROGRESS\] ([\d\.]+)/);
+                    if (progressMatch && progressMatch[1]) {
+                        const progress = parseFloat(progressMatch[1]);
+                        // Send to a specific channel for the cleaner UI
+                        mainWindow.webContents.send('cleaner-progress-update', progress);
+                    }
+                } else {
+                    // Forward normal logs
+                    mainWindow.webContents.send('csharp-log', logMessage);
+                }
             }
             if (!hostSignaledReady && (logMessage.includes("Listening on http://localhost:5088") || logMessage.includes("Application started."))) {
                 hostSignaledReady = true;
@@ -350,3 +365,53 @@ app.on('activate', () => {
 ipcMain.on('minimize-window', () => mainWindow?.minimize());
 ipcMain.on('close-window', () => mainWindow?.close());
 ipcMain.handle('get-api-base-url', async () => 'http://localhost:5088');
+ipcMain.handle('load-html', async (event, htmlPath) => {
+    // Basic security check
+    const allowedFiles = ['cleaner.html'];
+    if (mainWindow && allowedFiles.includes(path.basename(htmlPath))) {
+        const fullPath = path.join(__dirname, htmlPath);
+        return fs.readFileSync(fullPath, 'utf-8');
+    }
+    return null;
+});
+
+ipcMain.handle('show-open-dialog', async (event, options) => {
+    if (mainWindow) {
+        const { dialog } = require('electron');
+        const result = await dialog.showOpenDialog(mainWindow, options);
+        return result;
+    }
+    return { canceled: true, filePaths: [] };
+});
+
+ipcMain.handle('execute-plugin-command', async (event, pluginId, command, payload) => {
+    // Forward the command to the C# backend
+    const baseUrl = 'http://localhost:5088'; // Assuming this is your API base
+    try {
+        const response = await net.fetch(`${baseUrl}/api/plugins/${pluginId}/execute`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ commandName: command, payload: payload }),
+        });
+        
+        if (response.ok) {
+            // Check if response has content before trying to parse JSON
+            const text = await response.text();
+            return text ? JSON.parse(text) : null;
+        } else {
+            const errorText = await response.text();
+            throw new Error(`API Error ${response.status}: ${errorText}`);
+        }
+    } catch (error) {
+        log.error(`Failed to execute plugin command '${command}':`, error);
+        throw error; // Re-throw to send error back to renderer
+    }
+});
+
+ipcMain.handle('get-store-value', (event, key) => {
+    return store.get(key);
+});
+
+ipcMain.handle('set-store-value', (event, key, value) => {
+    store.set(key, value);
+});

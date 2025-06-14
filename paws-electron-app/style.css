@@ -1,11 +1,21 @@
+/* --- NEW: Define the custom font --- */
+@font-face {
+    font-family: 'Wix Madefor Display';
+    src: url('./assets/WixMadeforDisplay-VariableFont_wght.ttf') format('truetype');
+    /* You can specify weight and style ranges for variable fonts */
+    font-weight: 100 900;
+    font-style: normal;
+}
+
 /* Basic Reset & Global Styles */
 body, html {
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* A common system font stack */
-    background-color: #1e1e1e; /* Dark background for the app */
-    color: #d4d4d4; /* Light text color */
-    overflow: hidden; /* Prevent scrollbars on the body itself */
+    /* --- APPLY THE FONT HERE --- */
+    font-family: 'Wix Madefor Display', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    overflow: hidden;
     height: 100vh;
     width: 100vw;
 }
@@ -14,25 +24,25 @@ body, html {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    border: 1px solid #333; /* Subtle border for the window */
+    outline: 1px solid #333;
     box-sizing: border-box;
-    border-radius: 8px; /* Rounded corners for the window */
-    overflow: hidden; /* Clip content to rounded corners */
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 /* Title Bar */
 #title-bar {
     height: 28px;
-    background-color: #333333; /* Darker grey for title bar */
+    background-color: #333333;
     color: #cccccc;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 8px;
-    -webkit-app-region: drag; /* Makes the title bar draggable */
-    user-select: none; /* Prevent text selection */
-    flex-shrink: 0; /* Prevent title bar from shrinking */
-    border-top-left-radius: 7px; /* Match app-container radius */
+    -webkit-app-region: drag;
+    user-select: none;
+    flex-shrink: 0;
+    border-top-left-radius: 7px;
     border-top-right-radius: 7px;
 }
 
@@ -43,51 +53,51 @@ body, html {
 }
 
 #title-bar-btns {
-    -webkit-app-region: no-drag; /* Buttons should not be draggable */
+    -webkit-app-region: no-drag;
 }
 
 .title-bar-btn {
     background: none;
     border: none;
     color: #cccccc;
-    font-size: 16px; /* Adjust for better visual balance */
-    padding: 0 10px; /* More clickable area */
-    line-height: 28px; /* Center vertically */
+    font-size: 16px;
+    padding: 0 10px;
+    line-height: 28px;
     cursor: pointer;
     outline: none;
 }
 .title-bar-btn:hover {
-    background-color: #4f4f4f;
+    background-color: #4f4f52;
 }
 #close-btn:hover {
-    background-color: #e81123; /* Standard red for close */
+    background-color: #e81123;
     color: white;
 }
 
 /* Main Layout */
 #main-layout {
     display: flex;
-    flex-grow: 1; /* Takes remaining vertical space */
-    background-color: #333; /* Slightly lighter than title bar for content area */
-    overflow: hidden; /* Important if main-content overflows */
+    flex-grow: 1;
+    background-color: #333;
+    overflow: hidden;
 }
 
 /* Nav Bar */
 #nav-bar {
     width: 80px;
-    background-color: #333333; /* Same as title bar for consistency */
+    background-color: #333333;
     padding: 10px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex-shrink: 0; /* Prevent navbar from shrinking */
-    border-bottom-left-radius: 7px; /* Match app-container radius */
+    flex-shrink: 0;
+    border-bottom-left-radius: 7px;
 }
 
 .nav-item {
     width: 60px;
     height: 60px;
-    background-color: #3e3e42; /* Placeholder color for items */
+    background-color: #3e3e42;
     border-radius: 8px;
     margin-bottom: 10px;
     display: flex;
@@ -97,15 +107,13 @@ body, html {
     font-size: 10px;
     cursor: pointer;
     text-align: center;
-}
-.nav-item.placeholder::before {
-    content: ""; /* Empty for pure placeholder */
+    border: none; /* Ensure buttons in nav don't have default borders */
 }
 .nav-item:hover {
     background-color: #4f4f52;
 }
 #settings-btn {
-    margin-top: auto; /* Pushes settings to the bottom */
+    margin-top: auto;
     text-transform: lowercase;
     font-weight: bold;
 }
@@ -113,11 +121,11 @@ body, html {
 /* Main Content Area */
 #main-content {
     flex-grow: 1;
-    padding: 20px;
-    background-color: #1e1e1e; /* Darkest area for focused content */
-    overflow-y: auto; /* Allow scrolling if content exceeds height */
-    border-bottom-right-radius: 7px; /* Match app-container radius */
+    background-color: #1e1e1e;
+    overflow-y: auto;
+    border-bottom-right-radius: 7px;
     border-top-left-radius: 12px; 
+    padding: 46px; /* Your permanent change */
 }
 
 #main-content h1 {
@@ -138,7 +146,7 @@ body, html {
     font-size: 0.9em;
     white-space: pre-wrap;
     word-break: break-all;
-    color: #a0dda0; /* Greenish for logs */
+    color: #a0dda0;
 }
 #csharp-logs h3 {
     margin-top: 0;

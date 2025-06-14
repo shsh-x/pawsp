@@ -4,41 +4,48 @@ using Microsoft.Extensions.Hosting;
 using Paws.Core.Abstractions;
 using Paws.Host;
 using System;
-using System.Linq;           // Add this for LINQ Select
+using System.Linq;
+using System.Text; // << ADD THIS using statement
+using System.Text.Json.Serialization;
+
+// --- START OF THE FIX ---
+// This MUST be the first line of executable code to register the encoding providers.
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+// --- END OF THE FIX ---
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseUrls("http://localhost:5088");
 
-// Register HostServices and PluginManager
-builder.Services.AddSingleton<IHostServices, HostServices>();
-builder.Services.AddSingleton<PluginManager>(); // PluginManager will be created once
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
+builder.Services.AddSingleton<IHostServices, HostServices>();
+builder.Services.AddSingleton<PluginManager>();
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-// Load plugins after the app is built but before it runs
-// This ensures services like IHostEnvironment (used by PluginManager indirectly) are available.
 var pluginManager = app.Services.GetRequiredService<PluginManager>();
-pluginManager.LoadPlugins(); // <<< LOAD PLUGINS HERE
+pluginManager.LoadPlugins();
 
-Console.WriteLine("Paws.Host C# Backend starting..."); // Moved this message after plugin loading attempt
+Console.WriteLine("Paws.Host C# Backend starting...");
 
 app.MapGet("/api/health", () => {
     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/health requested");
     return Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow });
 });
 
-app.MapGet("/api/plugins", (PluginManager pm) => { // Inject PluginManager
+app.MapGet("/api/plugins", (PluginManager pm) => {
     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/plugins requested");
     var plugins = pm.GetLoadedPlugins()
-                    .Select(p => new { p.Id, p.Name, p.IconName, p.Description, p.Version }) // Select only what UI needs
+                    .Select(p => new { p.Id, p.Name, p.IconName, p.Description, p.Version })
                     .ToList();
     return Results.Ok(plugins);
 });
 
-// Placeholder for executing plugin commands
 app.MapPost("/api/plugins/{pluginId}/execute", async (Guid pluginId, ExecuteCommandRequest request, PluginManager pm) =>
 {
     var plugin = pm.GetPluginById(pluginId);
@@ -49,7 +56,6 @@ app.MapPost("/api/plugins/{pluginId}/execute", async (Guid pluginId, ExecuteComm
 
     try
     {
-        // Ensure request.CommandName is not null or empty
         if (string.IsNullOrEmpty(request.CommandName))
         {
             return Results.BadRequest(new { Message = "CommandName is required." });
@@ -63,9 +69,8 @@ app.MapPost("/api/plugins/{pluginId}/execute", async (Guid pluginId, ExecuteComm
     }
     catch (Exception ex)
     {
-        // Log the full exception server-side
         var hostServices = app.Services.GetRequiredService<IHostServices>();
-        hostServices.LogMessage($"Plugin '{plugin.Name}' received unknown command: '{request.CommandName}'", Paws.Core.Abstractions.LogLevel.Warning);
+        hostServices.LogMessage($"Error executing command '{request.CommandName}' for plugin '{plugin.Name}': {ex}", Paws.Core.Abstractions.LogLevel.Error);
         return Results.Problem($"An error occurred while executing the command: {ex.Message}");
     }
 });
@@ -75,5 +80,4 @@ Console.WriteLine("Send SIGINT (Ctrl+C) or SIGTERM to shutdown.");
 
 app.Run();
 
-// Define a record for the request body of execute command
 public record ExecuteCommandRequest(string CommandName, object? Payload);

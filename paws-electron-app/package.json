@@ -38,6 +38,13 @@
     ],
     "extraResources": [
       {
+        "from": "assets",
+        "to": "assets",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
         "from": "../Paws.DotNet/Paws.Host/bin/Release/net8.0/",
         "to": "Paws.DotNet/Paws.Host",
         "filter": [

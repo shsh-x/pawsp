@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cleaner</title>
+    <link rel="stylesheet" href="cleaner.css">
+</head>
+<body>
+    <div id="setup-view">
+        <div class="setup-card">
+            <h1>Welcome to the Cleaner!</h1>
+            <p id="setup-info-text">Locating your osu! installation...</p>
+            <div id="setup-buttons">
+                <button id="select-osu-folder-btn" class="hidden">Choose Folder</button>
+                <button id="confirm-osu-folder-btn" class="hidden">Yes, that's it</button>
+                <button id="change-osu-folder-btn" class="hidden">No, let me change it</button>
+            </div>
+            <p class="setup-info">Paws needs the root folder containing "osu!.exe".</p>
+        </div>
+    </div>
+    
+    <div id="cleaner-container" class="hidden">
+        <div id="main-grid">
+            <div class="column" id="col-controls">
+                <div id="filters-grid">
+                    <div class="filter-column">
+                        <div class="card">
+                            <h2 class="card-title">ruleset</h2>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" data-param="deleteModes" value="Osu"> osu!</label>
+                                <label><input type="checkbox" data-param="deleteModes" value="Mania"> osu!mania</label>
+                                <label><input type="checkbox" data-param="deleteModes" value="Catch"> osu!catch</label>
+                                <label><input type="checkbox" data-param="deleteModes" value="Taiko"> osu!taiko</label>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-title">skin</h2>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" data-param="deleteSkinHitsounds"> hitsounds</label>
+                                <label><input type="checkbox" data-param="deleteSkinGraphics"> graphics</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-column">
+                        <div class="card">
+                            <h2 class="card-title">background</h2>
+                            <div class="radio-group" id="background-options">
+                                <label><input type="radio" name="background" value="white" checked> white</label>
+                                <label><input type="radio" name="background" value="black"> black</label>
+                                <label><input type="radio" name="background" value="custom"> custom</label>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-title">other</h2>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" data-param="deleteStoryboards"> storyboards</label>
+                                <label><input type="checkbox" data-param="deleteVideos"> videos</label>
+                                <label class="disabled"><input type="checkbox" disabled> advanced</label>
+                                <label class="thread-label">
+                                    Max Threads: <input type="number" id="max-threads-input" value="4" min="1">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="management-btn" id="manage-exceptions-btn" disabled>
+                    manage exceptions
+                    <span>0</span>
+                </button>
+                <button id="clean-btn">clean!</button>
+            </div>
+            
+            <div class="column" id="col-right">
+                <div id="log-output-card">
+                    <pre id="log-output"></pre>
+                </div>
+                <div id="progress-container">
+                    <div id="progress-bar"></div>
+                </div>
+            </div>
+        </div>        
+    </div>
+    <script src="cleaner.js"></script>
+</body>
+</html>
