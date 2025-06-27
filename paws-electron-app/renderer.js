@@ -3,29 +3,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeBtn = document.getElementById('close-btn');
     const navBar = document.getElementById('nav-bar');
     const settingsBtn = document.getElementById('settings-btn');
-    const pluginWebview = document.getElementById('plugin-webview');
+    const pluginIframe = document.getElementById('plugin-iframe');
     const welcomeMessage = document.getElementById('welcome-message');
 
-    pluginWebview.style.display = 'none';
+    pluginIframe.style.display = 'none';
     let apiBaseUrl = '';
 
     minimizeBtn.addEventListener('click', () => window.electronAPI.minimizeWindow());
     closeBtn.addEventListener('click', () => window.electronAPI.closeWindow());
 
-    // This is correct: get the absolute path for the webview's preload script
-    const preloadPath = await window.electronAPI.resolvePath('preload.js');
-    pluginWebview.setAttribute('preload', `file://${preloadPath}`);
-
-    // --- THE MAIN FIX: IPC PROXY FOR WEBVIEW ---
-    // Listen for messages coming FROM the webview guest page TO this host page.
-    pluginWebview.addEventListener('ipc-message', async (event) => {
-        const { channel, payload, id } = event.args[0];
-
+    window.addEventListener('message', async (event) => {
+        if (event.source !== pluginIframe.contentWindow) return;
+        const { channel, payload, id } = event.data;
         if (!id || !channel) return;
 
         try {
             let result;
-            // Based on the channel, call the REAL electronAPI function from the host page.
             switch (channel) {
                 case 'get-store-value':
                     result = await window.electronAPI.getStoreValue(payload);
@@ -42,30 +35,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 default:
                     throw new Error(`Unknown IPC channel from plugin: ${channel}`);
             }
-
-            // Send the successful result BACK to the webview, using the same message id.
-            if (!pluginWebview.isDestroyed()) {
-                pluginWebview.send('host-response', { id, result });
-            }
+            pluginIframe.contentWindow.postMessage({ id, result }, '*');
         } catch (error) {
-            // If an error occurred, send the error back to the webview.
-            if (!pluginWebview.isDestroyed()) {
-                pluginWebview.send('host-response', { id, error: error.message });
-            }
+            pluginIframe.contentWindow.postMessage({ id, error: error.message }, '*');
         }
     });
-    // --- END OF FIX ---
 
-    pluginWebview.addEventListener('dom-ready', () => {
-        // Uncomment to debug the plugin's UI specifically
-        // pluginWebview.openDevTools();
-    });
-    pluginWebview.addEventListener('console-message', (e) => {
-        console.log(`[Plugin Webview] ${e.message}`);
-    });
+    // THE FIX: The entire 'load' event listener that caused the error has been REMOVED.
+    // The plugin is now responsible for its own styling.
 
     function showPluginApprovalModal(pendingPlugins, currentlyApproved) {
-        // This function from the previous steps is correct.
         const modalBackdrop = document.createElement('div');
         modalBackdrop.id = 'modal-backdrop';
         modalBackdrop.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000;';
@@ -95,7 +74,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadPluginsIntoNavbar() {
-        // This function from the previous steps is correct.
         try {
             const response = await fetch(`${apiBaseUrl}/api/plugins`);
             if (!response.ok) throw new Error(`Failed to fetch plugins: ${response.status}`);
@@ -110,8 +88,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (plugin.ui && plugin.ui.entry) {
                     pluginBtn.addEventListener('click', () => {
                         welcomeMessage.style.display = 'none';
-                        pluginWebview.style.display = 'block';
-                        pluginWebview.src = `paws-plugin://${plugin.id.toLowerCase()}/${plugin.ui.entry}`;
+                        pluginIframe.style.display = 'block';
+                        const cacheBust = `?v=${Date.now()}`;
+                        pluginIframe.src = `paws-plugin://${plugin.id.toLowerCase()}/${plugin.ui.entry}${cacheBust}`;
                     });
                 } else {
                     pluginBtn.disabled = true;
@@ -127,7 +106,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function initializeApp() {
-        // This function from the previous steps is correct.
         apiBaseUrl = await window.electronAPI.getApiBaseUrl();
         await loadPluginsIntoNavbar();
         try {
@@ -142,7 +120,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("Error checking for pending plugins:", error);
         }
         window.electronAPI.signalRendererReady();
-        console.log("Renderer has signaled readiness.");
     }
 
     initializeApp();

@@ -6,34 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <!-- YOUR EXISTING CODE (UNHARMED) -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.15" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" /> <!-- I corrected this version to be compatible with .NET 8, 9.0.6 was likely a typo -->
+    <!-- The host now only needs to know about the core abstractions. -->
     <ProjectReference Include="..\Paws.Core.Abstractions\Paws.Core.Abstractions.csproj" />
   </ItemGroup>
-
-  <!-- MY NEW CODE (ADDED SAFELY AT THE END) -->
-  <Target Name="CopyFrontendAssets" AfterTargets="Build">
-    <!-- Define the source directory for assets in the Electron app -->
-    <PropertyGroup>
-      <FrontendAssetDir>$(SolutionDir)paws-electron-app/assets/</FrontendAssetDir>
-    </PropertyGroup>
-    
-    <!-- Define the list of files to copy -->
-    <ItemGroup>
-      <FrontendAssets Include="$(FrontendAssetDir)**/*" />
-    </ItemGroup>
-    
-    <!-- Perform the copy operation -->
-    <Copy
-      SourceFiles="@(FrontendAssets)"
-      DestinationFolder="$(OutDir)assets/%(RecursiveDir)"
-      SkipUnchangedFiles="true"
-      UseHardlinksIfPossible="false" />
-      
-    <Message Text="Copied frontend assets from $(FrontendAssetDir) to $(OutDir)assets/" Importance="high" />
-  </Target>
 
 </Project>

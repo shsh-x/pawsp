@@ -2,12 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <!-- 
-      FIX: Added 'connect-src http://localhost:5088' to the policy.
-      This explicitly tells Electron that the UI is allowed to make API calls 
-      to our local C# backend.
-    -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://localhost:5088; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-src paws-plugin:">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://localhost:5088; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-src paws-plugin:;">
     <title>Paws</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -27,7 +22,8 @@
             </div>
 
             <div id="main-content">
-                <webview id="plugin-webview" style="width:100%; height:100%;"></webview>
+                <!-- THE FIX: Replaced webview with a sandboxed iframe -->
+                <iframe id="plugin-iframe" sandbox="allow-scripts allow-forms" style="width:100%; height:100%; border:none;"></iframe>
                 
                 <div id="welcome-message">
                     <h1>Welcome to Paws!</h1>
