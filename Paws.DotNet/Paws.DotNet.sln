@@ -4,9 +4,9 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Paws.DotNet", "Paws.DotNet", "{2B91DED0-0A9D-431F-AE2E-03606AB2FAC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Paws.Host", "Paws.DotNet\Paws.Host\Paws.Host.csproj", "{9A9FE067-4689-4F18-9E37-673ECA9739B3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Paws.Host", "Paws.Host\Paws.Host.csproj", "{9A9FE067-4689-4F18-9E37-673ECA9739B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Paws.Core.Abstractions", "Paws.DotNet\Paws.Core.Abstractions\Paws.Core.Abstractions.csproj", "{B14DD43A-A4AC-4D1B-8983-E69E25F4AF0D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Paws.Core.Abstractions", "Paws.Core.Abstractions\Paws.Core.Abstractions.csproj", "{B14DD43A-A4AC-4D1B-8983-E69E25F4AF0D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
