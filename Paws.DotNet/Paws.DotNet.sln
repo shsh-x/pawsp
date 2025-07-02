@@ -2,8 +2,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Paws.DotNet", "Paws.DotNet", "{2B91DED0-0A9D-431F-AE2E-03606AB2FAC9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Paws.Host", "Paws.Host\Paws.Host.csproj", "{9A9FE067-4689-4F18-9E37-673ECA9739B3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Paws.Core.Abstractions", "Paws.Core.Abstractions\Paws.Core.Abstractions.csproj", "{B14DD43A-A4AC-4D1B-8983-E69E25F4AF0D}"
@@ -12,9 +10,6 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{9A9FE067-4689-4F18-9E37-673ECA9739B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -26,8 +21,7 @@ Global
 		{B14DD43A-A4AC-4D1B-8983-E69E25F4AF0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B14DD43A-A4AC-4D1B-8983-E69E25F4AF0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{9A9FE067-4689-4F18-9E37-673ECA9739B3} = {2B91DED0-0A9D-431F-AE2E-03606AB2FAC9}
-		{B14DD43A-A4AC-4D1B-8983-E69E25F4AF0D} = {2B91DED0-0A9D-431F-AE2E-03606AB2FAC9}
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

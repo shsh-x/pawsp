@@ -17,6 +17,10 @@ autoUpdater.autoInstallOnAppQuit = true;
 const isDev = !app.isPackaged;
 const store = new Store();
 
+const WIDE_WIDTH = 1200;
+const COMPACT_WIDTH = 672;
+const WINDOW_HEIGHT = 800;
+
 let mainWindow;
 let splashWindow;
 let csharpProc = null;
@@ -58,8 +62,9 @@ function createSplashWindow() {
 
 function createMainWindow() {
     mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
+        width: WIDE_WIDTH,
+        height: WINDOW_HEIGHT,
+        // Start with resizable: false. This is the key to preventing manual resize and the cursor.
         resizable: false,
         frame: false,
         show: false,
@@ -67,10 +72,8 @@ function createMainWindow() {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
             nodeIntegration: false,
-            // Allows the use of the <iframe> tag for plugins
-            webviewTag: true, 
         },
-        icon: path.join(__dirname, 'assets', 'paws_logo_splash.png') // Assuming you want to keep the logo as the icon
+        icon: path.join(__dirname, 'assets', 'icon.png')
     });
 
     mainWindow.loadFile('index.html');
@@ -80,7 +83,6 @@ function createMainWindow() {
 }
 
 function attemptShowMainWindow() {
-    // This function ensures all startup tasks are complete before showing the main window.
     if (mainAppStructureReady && csharpHostReady && updateProcessFinished && splashWindow) {
         sendToSplash('splash-status-update', 'Launching Paws...');
         setTimeout(() => {
@@ -98,7 +100,6 @@ function startCSharpHost() {
     sendToSplash('splash-status-update', 'Starting backend services...');
     log.info(`Attempting to start C# host from: ${csharpHostPath}`);
 
-    // Get the list of approved plugin GUIDs from storage. This is the generic way.
     const approvedGuids = store.get('approvedPlugins', []);
     const args = [JSON.stringify(approvedGuids)];
 
@@ -106,7 +107,6 @@ function startCSharpHost() {
         csharpProc = spawn(csharpHostPath, args);
         let hostSignaledReady = false;
         
-        // Generic log forwarder. It no longer looks for plugin-specific messages.
         csharpProc.stdout.on('data', (data) => {
             const logMessage = data.toString();
             log.info(`C# Host STDOUT: ${logMessage.trim()}`);
@@ -184,7 +184,6 @@ app.whenReady().then(async () => {
         log.error('Failed to build plugin folder map:', e);
     }
 
-    // This custom protocol allows plugins to load their own UI files securely.
     protocol.handle('paws-plugin', (request) => {
         try {
             const url = new URL(request.url);
@@ -247,6 +246,22 @@ ipcMain.on('renderer-ready', () => {
 ipcMain.on('minimize-window', () => mainWindow?.minimize());
 ipcMain.on('close-window', () => mainWindow?.close());
 
+// --- THE FINAL, CORRECT RESIZE FIX ---
+ipcMain.on('resize-window', (event, isCompact) => {
+    if (mainWindow) {
+        const newWidth = isCompact ? COMPACT_WIDTH : WIDE_WIDTH;
+        
+        // 1. Temporarily make the window resizable
+        mainWindow.setResizable(true);
+
+        // 2. Set the new size. This now works every time.
+        mainWindow.setSize(newWidth, WINDOW_HEIGHT, true);
+        
+        // 3. Immediately set it back to not resizable to prevent manual interaction.
+        mainWindow.setResizable(false);
+    }
+});
+
 // --- Generic Handlers for Framework Features ---
 
 ipcMain.handle('get-api-base-url', () => 'http://localhost:5088');
@@ -274,10 +289,6 @@ ipcMain.handle('set-approved-plugins', (event, guids) => {
         message: 'Plugin changes have been saved. Please restart Paws for the changes to take effect.',
         buttons: ['OK']
     });
-});
-
-ipcMain.handle('resolve-path', (event, filePath) => {
-    return path.resolve(__dirname, filePath);
 });
 
 ipcMain.handle('execute-plugin-command', async (event, pluginId, command, payload) => {

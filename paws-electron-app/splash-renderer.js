@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBarContainer = document.getElementById('progress-bar-container');
     const progressBarEl = document.getElementById('progress-bar');
 
-    const tips = [
+    const tips = [      // Need to move that later to external file with 
         "Paws: Your osu! companion for a cleaner experience.",
         "Modules can be added to Paws to extend its functionality.",
         "The Cleaner module helps manage beatmap backgrounds and extra files.",
