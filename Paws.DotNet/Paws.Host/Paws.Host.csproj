@@ -11,4 +11,8 @@
     <ProjectReference Include="..\Paws.Core.Abstractions\Paws.Core.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Realm" Version="12.5.0" />
+  </ItemGroup>
+
 </Project>

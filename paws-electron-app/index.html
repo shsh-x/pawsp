@@ -34,6 +34,17 @@
                 <div id="welcome-message">
                     <h1>Welcome to Paws!</h1>
                     <p>Select a module from the sidebar to get started.</p>
+
+                    <!-- NEW: Test Controls Area -->
+                    <div id="test-controls-container">
+                        <h3>Lazer Database Tests</h3>
+                        <p class="test-instructions">Ensure your osu!(lazer) path is set in settings. For the write test, **make sure osu!lazer is completely closed**.</p>
+                        <div class="test-buttons">
+                            <button id="test-read-btn" class="paws-button secondary">Test Read Access</button>
+                            <button id="test-write-btn" class="paws-button secondary">Test Write Access</button>
+                        </div>
+                        <div id="test-results"></div>
+                    </div>
                 </div>
             </div>
             <button id="resize-btn" title="Toggle Compact View"><</button>
@@ -41,4 +52,3 @@
     </div>
     <script src="renderer.js"></script>
 </body>
-</html>

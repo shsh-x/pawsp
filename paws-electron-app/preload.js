@@ -1,6 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+    setLazerPath: (path) => ipcRenderer.invoke('set-lazer-path', path),
+    testLazerConnection: () => ipcRenderer.invoke('test-lazer-connection'),
+    testLazerWrite: () => ipcRenderer.invoke('test-lazer-write'),
     minimizeWindow: () => ipcRenderer.send('minimize-window'),
     closeWindow: () => ipcRenderer.send('close-window'),
     resizeWindow: (isCompact) => ipcRenderer.send('resize-window', isCompact),

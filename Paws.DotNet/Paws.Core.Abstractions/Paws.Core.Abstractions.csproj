@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Realm" Version="12.5.0" />
+  </ItemGroup>
+
 </Project>

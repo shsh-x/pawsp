@@ -64,7 +64,6 @@ function createMainWindow() {
     mainWindow = new BrowserWindow({
         width: WIDE_WIDTH,
         height: WINDOW_HEIGHT,
-        // Start with resizable: false. This is the key to preventing manual resize and the cursor.
         resizable: false,
         frame: false,
         show: false,
@@ -195,15 +194,18 @@ app.whenReady().then(async () => {
                 return new Response(null, { status: 404 });
             }
 
-            const requestedPath = decodeURIComponent(url.pathname);
-            const absolutePath = path.join(pluginsBaseDir, folderName, 'ui', requestedPath);
+            // THE FIX: Remove the leading '/' from the pathname to ensure correct path joining.
+            const requestedPath = decodeURIComponent(url.pathname).substring(1);
+
             const safeBaseDir = path.join(pluginsBaseDir, folderName, 'ui');
+            const absolutePath = path.join(safeBaseDir, requestedPath);
             
             if (!path.normalize(absolutePath).startsWith(path.normalize(safeBaseDir))) {
                 log.error(`Security violation: Attempt to access file outside of allowed directory. Request: ${request.url}`);
                 return new Response(null, { status: 403 });
             }
-            return net.fetch(`file://${absolutePath}`);
+            // Use encodeURI to handle special characters in file paths correctly.
+            return net.fetch(encodeURI(`file://${absolutePath.replace(/\\/g, '/')}`));
         } catch (error) {
             log.error(`Error in custom protocol handler for ${request.url}: ${error}`);
             return new Response(null, { status: 500 });
@@ -246,21 +248,70 @@ ipcMain.on('renderer-ready', () => {
 ipcMain.on('minimize-window', () => mainWindow?.minimize());
 ipcMain.on('close-window', () => mainWindow?.close());
 
-// --- THE FINAL, CORRECT RESIZE FIX ---
 ipcMain.on('resize-window', (event, isCompact) => {
     if (mainWindow) {
         const newWidth = isCompact ? COMPACT_WIDTH : WIDE_WIDTH;
-        
-        // 1. Temporarily make the window resizable
         mainWindow.setResizable(true);
-
-        // 2. Set the new size. This now works every time.
         mainWindow.setSize(newWidth, WINDOW_HEIGHT, true);
-        
-        // 3. Immediately set it back to not resizable to prevent manual interaction.
         mainWindow.setResizable(false);
     }
 });
+
+ipcMain.handle('set-lazer-path', async (event, path) => {
+    if (!path) return;
+    const baseUrl = 'http://localhost:5088';
+    try {
+        await net.fetch(`${baseUrl}/api/db/set-lazer-path`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path }),
+        });
+    } catch (error) {
+        log.error(`Failed to set lazer path:`, error);
+    }
+});
+
+ipcMain.handle('test-lazer-connection', async () => {
+    const baseUrl = 'http://localhost:5088';
+    try {
+        const response = await net.fetch(`${baseUrl}/api/db/test-lazer-connection`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `API Error ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        log.error(`Failed to test lazer connection:`, error);
+        throw error;
+    }
+});
+
+ipcMain.handle('test-lazer-write', async () => {
+    const baseUrl = 'http://localhost:5088';
+    try {
+        const response = await net.fetch(`${baseUrl}/api/db/test-lazer-write`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            // Attempt to parse the error as JSON, which is what ASP.NET Core sends for ProblemDetails
+            try {
+                const problemDetails = JSON.parse(errorText);
+                throw new Error(JSON.stringify({
+                    title: problemDetails.title,
+                    status: problemDetails.status,
+                    detail: problemDetails.detail
+                }));
+            } catch {
+                // Fallback for non-JSON errors
+                throw new Error(errorText || `API Error ${response.status}`);
+            }
+        }
+        return await response.json();
+    } catch (error) {
+        log.error(`Failed to test lazer write:`, error);
+        throw error;
+    }
+});
+
 
 // --- Generic Handlers for Framework Features ---
 

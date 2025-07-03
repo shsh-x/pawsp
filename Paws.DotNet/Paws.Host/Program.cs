@@ -5,22 +5,29 @@ using Paws.Host;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Realms; // Required for using Realm types
 
-// This must be registered to support legacy encodings in .osu files
+// This must be registered to support legacy encodings in .osu files if ever needed by a plugin.
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --- Service Configuration ---
 builder.WebHost.UseUrls("http://localhost:5088");
+
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
+
+// Register our custom services for Dependency Injection.
+builder.Services.AddSingleton<LazerDbService>();
 builder.Services.AddSingleton<IHostServices, HostServices>();
 builder.Services.AddSingleton<PluginManager>();
 
 var app = builder.Build();
 
+// --- Application Startup Logic ---
 var pluginManager = app.Services.GetRequiredService<PluginManager>();
 
 // Get the list of approved plugin GUIDs from the command line arguments
@@ -43,7 +50,85 @@ pluginManager.LoadPlugins(approvedGuids);
 
 Console.WriteLine("Paws.Host C# Backend starting...");
 
-// API endpoint to get the list of LOADED plugins
+// --- API Endpoint Definitions ---
+
+// --- Database Endpoints ---
+app.MapPost("/api/db/set-lazer-path", (SetPathRequest request, LazerDbService dbService) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Path))
+        return Results.BadRequest("Path cannot be empty.");
+
+    dbService.SetLazerPath(request.Path);
+    return Results.Ok();
+});
+
+app.MapGet("/api/db/test-lazer-connection", (LazerDbService dbService) =>
+{
+    using var db = dbService.GetInstance();
+
+    if (db == null)
+    {
+        return Results.Problem("Lazer database path is not set or the file is inaccessible. Please set it in Paws settings.", statusCode: 404);
+    }
+
+    try
+    {
+        var beatmapSets = db.DynamicApi.All("BeatmapSet");
+        return Results.Ok(new { beatmapSetCount = beatmapSets.Count() });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"An error occurred while querying the database: {ex.Message}", statusCode: 500);
+    }
+});
+
+app.MapGet("/api/db/test-lazer-write", async (IHostServices hostServices) =>
+{
+    try
+    {
+        string? modifiedSetTitle = null;
+
+        await hostServices.PerformLazerWriteAsync(db =>
+        {
+            dynamic? firstSet = db.DynamicApi.All("BeatmapSet").Filter("Protected == false").FirstOrDefault();
+
+            if (firstSet is null)
+            {
+                modifiedSetTitle = "No unprotected beatmap sets found to test with.";
+                return;
+            }
+
+            // Perform a safe "no-op" write.
+            bool originalValue = firstSet.DeletePending;
+            firstSet.DeletePending = !originalValue;
+            firstSet.DeletePending = originalValue;
+
+            // Iterate the dynamic 'Beatmaps' collection to get the first item
+            dynamic? firstBeatmap = null;
+            foreach (var beatmap in firstSet.Beatmaps)
+            {
+                firstBeatmap = beatmap;
+                break; // We only need the first one, so we exit the loop immediately.
+            }
+
+            // THE FIX: Use the 'firstBeatmap' variable we just created.
+            modifiedSetTitle = $"Successfully performed a test write on beatmap set: {firstBeatmap?.Metadata?.Title ?? "[No Title Found]"}";
+        });
+
+        return Results.Ok(new { message = modifiedSetTitle ?? "Write operation completed, but no sets were found to modify." });
+    }
+    catch (Paws.Core.Abstractions.LazerIsRunningException ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 423);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"An unexpected error occurred: {ex.Message}", statusCode: 500);
+    }
+});
+
+
+// --- Plugin Endpoints ---
 app.MapGet("/api/plugins", (PluginManager pm) =>
 {
     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/plugins requested");
@@ -58,14 +143,12 @@ app.MapGet("/api/plugins", (PluginManager pm) =>
     return Results.Ok(result);
 });
 
-// API endpoint to get plugins that were discovered but ARE NOT loaded
 app.MapGet("/api/plugins/pending", (PluginManager pm) =>
 {
     var pending = pm.GetPendingPlugins();
     return Results.Ok(pending);
 });
 
-// API endpoint to execute a command on a specific plugin
 app.MapPost("/api/plugins/{pluginId}/execute", async (Guid pluginId, ExecuteCommandRequest request, PluginManager pm) =>
 {
     var plugin = pm.GetPluginById(pluginId);
@@ -91,9 +174,10 @@ app.MapPost("/api/plugins/{pluginId}/execute", async (Guid pluginId, ExecuteComm
     }
 });
 
-
+// --- Run Application ---
 Console.WriteLine($"Listening on http://localhost:5088");
 app.Run();
 
-// Record used for the /execute endpoint
+// --- Supporting Record Types for API Requests ---
 public record ExecuteCommandRequest(string CommandName, object? Payload);
+public record SetPathRequest(string Path);

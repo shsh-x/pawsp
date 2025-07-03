@@ -372,3 +372,43 @@ body, html {
     margin: 2px 0 0 0;
     color: #b0b0b0;
 }
+
+/* Test Controls */
+#test-controls-container {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    border: 1px solid #444;
+    text-align: center;
+}
+
+#test-controls-container h3 {
+    margin-top: 0;
+    color: var(--color-text-secondary);
+}
+
+.test-instructions {
+    font-size: 0.9em;
+    color: #b0b0b0;
+    max-width: 400px;
+    margin: 10px auto;
+}
+
+.test-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+#test-results {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #1e1e1e;
+    border-radius: 5px;
+    min-height: 20px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
