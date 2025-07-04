@@ -18,6 +18,9 @@ namespace Paws.Host
             _logger = logger;
         }
 
+        /// <summary>
+        /// Sets the root path of the osu!lazer installation.
+        /// </summary>
         public void SetLazerPath(string path)
         {
             var dbPath = Path.Combine(path, "client.realm");
@@ -35,6 +38,7 @@ namespace Paws.Host
         /// <summary>
         /// Gets a read-only dynamic instance of the lazer Realm database.
         /// </summary>
+        /// <returns>A dynamic Realm instance or null if the path is not set/valid.</returns>
         public Realm? GetInstance()
         {
             if (string.IsNullOrEmpty(_lazerDbPath))
@@ -45,7 +49,7 @@ namespace Paws.Host
 
             try
             {
-                // THE FIX: For a dynamic realm, you should NOT specify a schema.
+                // For a dynamic realm, you should NOT specify a schema.
                 // The IsDynamic flag tells Realm to discover the schema from the file.
                 var config = new RealmConfiguration(_lazerDbPath)
                 {
@@ -65,6 +69,8 @@ namespace Paws.Host
         /// <summary>
         /// Gets a writeable dynamic instance of the lazer Realm database.
         /// </summary>
+        /// <returns>A dynamic Realm instance or null if the path is not set/valid.</returns>
+        /// <exception cref="LazerIsRunningException">Thrown if the osu!lazer process is detected.</exception>
         public Realm? GetWriteableInstance()
         {
             if (string.IsNullOrEmpty(_lazerDbPath))
@@ -73,6 +79,7 @@ namespace Paws.Host
                 return null;
             }
 
+            // Check if lazer is running before attempting to get a write lock.
             string processName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "osu!" : "osu";
             if (Process.GetProcessesByName(processName).Any())
             {
@@ -81,8 +88,8 @@ namespace Paws.Host
 
             try
             {
-                // THE FIX: For a dynamic realm, you should NOT specify a schema.
-                // The IsDynamic flag tells Realm to discover the schema from the file.
+                // The same configuration applies here for the writeable instance.
+                // No schema should be specified.
                 var config = new RealmConfiguration(_lazerDbPath)
                 {
                     IsDynamic = true,

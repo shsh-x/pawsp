@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Paws.Core.Abstractions;
 using Paws.Host;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Realms; // Required for using Realm types
+using Realms;
 
-// This must be registered to support legacy encodings in .osu files if ever needed by a plugin.
+// This must be registered to support legacy encodings in .osu files,
+// which OsuParsers might encounter.
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,19 +22,21 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-// Register our custom services for Dependency Injection.
+// Register all Paws services as singletons so they persist for the lifetime of the app.
 builder.Services.AddSingleton<LazerDbService>();
-builder.Services.AddSingleton<IHostServices, HostServices>();
+builder.Services.AddSingleton<StableDbService>();
 builder.Services.AddSingleton<PluginManager>();
+builder.Services.AddSingleton<IHostServices, HostServices>();
+
 
 var app = builder.Build();
 
-// --- Application Startup Logic ---
+// --- Plugin Loading ---
 var pluginManager = app.Services.GetRequiredService<PluginManager>();
 
 // Get the list of approved plugin GUIDs from the command line arguments
 var approvedGuids = new List<string>();
-if (args.Length > 0)
+if (args.Length > 0 && !string.IsNullOrWhiteSpace(args[0]))
 {
     var guidsJson = args[0];
     try
@@ -41,7 +45,9 @@ if (args.Length > 0)
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error deserializing approved GUIDs: {ex.Message}");
+        // Use the built-in logger to report errors
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Error deserializing approved plugin GUIDs from command line.");
     }
 }
 
@@ -50,9 +56,9 @@ pluginManager.LoadPlugins(approvedGuids);
 
 Console.WriteLine("Paws.Host C# Backend starting...");
 
-// --- API Endpoint Definitions ---
+// --- API Endpoints ---
 
-// --- Database Endpoints ---
+// Endpoint to set the path for the lazer database
 app.MapPost("/api/db/set-lazer-path", (SetPathRequest request, LazerDbService dbService) =>
 {
     if (string.IsNullOrWhiteSpace(request.Path))
@@ -62,6 +68,17 @@ app.MapPost("/api/db/set-lazer-path", (SetPathRequest request, LazerDbService db
     return Results.Ok();
 });
 
+// Endpoint to set the path for the stable installation
+app.MapPost("/api/db/set-stable-path", (SetPathRequest request, StableDbService dbService) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Path))
+        return Results.BadRequest("Path cannot be empty.");
+
+    dbService.SetStablePath(request.Path);
+    return Results.Ok();
+});
+
+// Endpoint to test reading the lazer database
 app.MapGet("/api/db/test-lazer-connection", (LazerDbService dbService) =>
 {
     using var db = dbService.GetInstance();
@@ -82,6 +99,7 @@ app.MapGet("/api/db/test-lazer-connection", (LazerDbService dbService) =>
     }
 });
 
+// Endpoint to test writing to the lazer database
 app.MapGet("/api/db/test-lazer-write", async (IHostServices hostServices) =>
 {
     try
@@ -98,28 +116,25 @@ app.MapGet("/api/db/test-lazer-write", async (IHostServices hostServices) =>
                 return;
             }
 
-            // Perform a safe "no-op" write.
             bool originalValue = firstSet.DeletePending;
             firstSet.DeletePending = !originalValue;
             firstSet.DeletePending = originalValue;
 
-            // Iterate the dynamic 'Beatmaps' collection to get the first item
             dynamic? firstBeatmap = null;
             foreach (var beatmap in firstSet.Beatmaps)
             {
                 firstBeatmap = beatmap;
-                break; // We only need the first one, so we exit the loop immediately.
+                break;
             }
 
-            // THE FIX: Use the 'firstBeatmap' variable we just created.
             modifiedSetTitle = $"Successfully performed a test write on beatmap set: {firstBeatmap?.Metadata?.Title ?? "[No Title Found]"}";
         });
 
         return Results.Ok(new { message = modifiedSetTitle ?? "Write operation completed, but no sets were found to modify." });
     }
-    catch (Paws.Core.Abstractions.LazerIsRunningException ex)
+    catch (LazerIsRunningException ex)
     {
-        return Results.Problem(ex.Message, statusCode: 423);
+        return Results.Problem(ex.Message, statusCode: 423); // 423 Locked
     }
     catch (Exception ex)
     {
@@ -127,15 +142,14 @@ app.MapGet("/api/db/test-lazer-write", async (IHostServices hostServices) =>
     }
 });
 
-
-// --- Plugin Endpoints ---
+// Endpoint to get the list of loaded plugins
 app.MapGet("/api/plugins", (PluginManager pm) =>
 {
-    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] GET /api/plugins requested");
     var loadedPlugins = pm.GetLoadedPlugins();
     var allManifests = pm.GetDiscoveredPluginManifests();
 
-    var result = loadedPlugins.Select(p => {
+    var result = loadedPlugins.Select(p =>
+    {
         var manifest = allManifests.FirstOrDefault(m => m.Id.Equals(p.Id.ToString(), StringComparison.OrdinalIgnoreCase));
         return new { p.Id, p.Name, p.IconName, p.Description, p.Version, Ui = manifest?.Ui };
     }).ToList();
@@ -143,13 +157,15 @@ app.MapGet("/api/plugins", (PluginManager pm) =>
     return Results.Ok(result);
 });
 
+// Endpoint to get plugins that were discovered but are not loaded
 app.MapGet("/api/plugins/pending", (PluginManager pm) =>
 {
     var pending = pm.GetPendingPlugins();
     return Results.Ok(pending);
 });
 
-app.MapPost("/api/plugins/{pluginId}/execute", async (Guid pluginId, ExecuteCommandRequest request, PluginManager pm) =>
+// Endpoint to execute a command on a specific plugin
+app.MapPost("/api/plugins/{pluginId}/execute", async (Guid pluginId, ExecuteCommandRequest request, PluginManager pm, IHostServices hostServices) =>
 {
     var plugin = pm.GetPluginById(pluginId);
     if (plugin == null)
@@ -168,16 +184,15 @@ app.MapPost("/api/plugins/{pluginId}/execute", async (Guid pluginId, ExecuteComm
     }
     catch (Exception ex)
     {
-        var hostServices = app.Services.GetRequiredService<IHostServices>();
         hostServices.LogMessage($"Error executing command '{request.CommandName}' on plugin '{plugin.Name}': {ex}", Paws.Core.Abstractions.LogLevel.Error);
         return Results.Problem($"An error occurred: {ex.Message}");
     }
 });
 
-// --- Run Application ---
+
 Console.WriteLine($"Listening on http://localhost:5088");
 app.Run();
 
-// --- Supporting Record Types for API Requests ---
+// --- API Request Records ---
 public record ExecuteCommandRequest(string CommandName, object? Payload);
 public record SetPathRequest(string Path);

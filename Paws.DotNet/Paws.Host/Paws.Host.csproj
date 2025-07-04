@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="OsuParsers" Version="1.7.2" />
     <PackageReference Include="Realm" Version="12.5.0" />
   </ItemGroup>
 

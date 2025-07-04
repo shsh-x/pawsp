@@ -325,6 +325,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             await window.electronAPI.setLazerPath(lazerPath);
         }
 
+        // --- NEW: Set Stable Path on startup ---
+        const stablePath = await window.electronAPI.getStoreValue('osuStablePath');
+        if (stablePath) {
+            await window.electronAPI.setStablePath(stablePath);
+        }
+
         const shouldResizeInSettings = await window.electronAPI.getStoreValue('resizeModeInSettings') || false;
         applyResizePreference(shouldResizeInSettings);
 

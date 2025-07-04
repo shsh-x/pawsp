@@ -362,3 +362,17 @@ ipcMain.handle('execute-plugin-command', async (event, pluginId, command, payloa
         throw error;
     }
 });
+
+ipcMain.handle('set-stable-path', async (event, path) => {
+    if (!path) return;
+    const baseUrl = 'http://localhost:5088';
+    try {
+        await net.fetch(`${baseUrl}/api/db/set-stable-path`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path }),
+        });
+    } catch (error) {
+        log.error(`Failed to set stable path:`, error);
+    }
+});

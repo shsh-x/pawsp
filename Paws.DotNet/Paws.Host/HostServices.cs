@@ -1,75 +1,107 @@
-using System;
-using System.Threading.Tasks;
 using Paws.Core.Abstractions;
 using Realms;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace Paws.Host
 {
     // The delegate and event that will allow us to talk back to Program.cs
     public delegate void UiEventRequestHandler(string eventName, object payload);
 
-    // We explicitly implement Paws.Core.Abstractions.IHostServices
+    /// <summary>
+    /// Implements the IHostServices interface, providing a concrete bridge between the Paws framework
+    /// and the individual plugins. It's responsible for handling requests from plugins for framework-level
+    /// services like database access, logging, and UI events.
+    /// </summary>
     public class HostServices : IHostServices
     {
+        // --- Private Fields for Injected Services ---
         private readonly LazerDbService _lazerDbService;
+        private readonly StableDbService _stableDbService;
+
         public event UiEventRequestHandler? OnUiEventRequested;
 
-        // Inject the LazerDbService via the constructor
-        public HostServices(LazerDbService lazerDbService)
+        /// <summary>
+        /// The constructor receives all necessary services from the dependency injection container.
+        /// </summary>
+        public HostServices(LazerDbService lazerDbService, StableDbService stableDbService)
         {
             _lazerDbService = lazerDbService;
+            _stableDbService = stableDbService;
         }
 
+        /// <summary>
+        /// Logs a message to the console, prefixed with the plugin's name.
+        /// </summary>
         public void LogMessage(string message, Paws.Core.Abstractions.LogLevel level = Paws.Core.Abstractions.LogLevel.Information, string? pluginName = null)
         {
             string prefix = pluginName != null ? $"[{pluginName}] " : "";
             Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] HOST_SERVICE_LOG ({level}): {prefix}{message}");
         }
 
+        /// <summary>
+        /// Invokes an event to send a message to the Electron frontend.
+        /// </summary>
         public void SendEventToUI(string eventName, object payload)
         {
             OnUiEventRequested?.Invoke(eventName, payload);
         }
 
         /// <summary>
-        /// Gets a dynamic realm instance for the configured osu!lazer database for READ-ONLY operations.
-        /// Returns null if the path is not set or the database cannot be opened.
+        /// Gets a read-only dynamic realm instance for the configured osu!lazer database.
         /// </summary>
-        /// <returns>A dynamic Realm instance, or null.</returns>
         public dynamic? GetLazerDatabase()
         {
-            // The return type of GetInstance is Realm, which is dynamic-friendly.
             return _lazerDbService.GetInstance();
         }
 
         /// <summary>
-        /// Safely performs a write operation on the lazer database.
-        /// Will throw a <see cref="LazerIsRunningException"/> if osu!lazer is detected to be running.
-        /// Handles database connection, transactions, and cleanup.
+        /// Safely performs a write operation on the lazer database after ensuring the game is closed.
         /// </summary>
-        /// <param name="action">The action to perform within a write transaction.</param>
         public Task PerformLazerWriteAsync(Action<Realm> action)
         {
-            // We can make this fully async later if needed, but for now, Task.Run
-            // is perfect to move this potentially long-running work off the main thread.
             return Task.Run(() =>
             {
-                // The GetWriteableInstance method now contains the process check and will throw if lazer is running.
-                // We wrap the entire operation in a using statement to guarantee disposal.
                 using var db = _lazerDbService.GetWriteableInstance();
 
                 if (db == null)
                 {
-                    // This would happen if the DB file is corrupt or locked by something else.
                     throw new InvalidOperationException("Failed to open the lazer database for writing. It may be locked or corrupt.");
                 }
 
-                // The using statement will handle rollback on exception.
                 using var transaction = db.BeginWrite();
-
                 action(db);
-
                 transaction.Commit();
+            });
+        }
+
+        /// <summary>
+        /// Asynchronously gets the parsed osu!stable osu!.db file.
+        /// </summary>
+        public async Task<object?> GetStableOsuDbAsync() => await _stableDbService.GetOsuDbAsync();
+
+        /// <summary>
+        /// Asynchronously gets the parsed osu!stable scores.db file.
+        /// </summary>
+        public async Task<object?> GetStableScoresDbAsync() => await _stableDbService.GetScoresDbAsync();
+
+        public Task PerformStableWriteAsync(Action<string> action)
+        {
+            return Task.Run(() =>
+            {
+                // 1. Get Path
+                var stablePath = _stableDbService.GetStableRootPath();
+                if (string.IsNullOrEmpty(stablePath))
+                    throw new InvalidOperationException("osu!stable path is not set.");
+                
+                // 2. Safety Check for Running Process
+                string processName = "osu!";
+                if (Process.GetProcessesByName(processName).Any())
+                    throw new StableIsRunningException();
+                
+                // 3. Execute the plugin's code
+                action(stablePath);
             });
         }
     }
