@@ -1,4 +1,4 @@
-/* --- NEW: Define the custom font --- */
+/* --- Custom Font --- */
 @font-face {
     font-family: 'Wix Madefor Display';
     src: url('./assets/WixMadeforDisplay-VariableFont_wght.ttf') format('truetype');
@@ -6,7 +6,12 @@
     font-style: normal;
 }
 
-/* Basic Reset & Global Styles */
+/* --- Global Styles & Reset --- */
+:root {
+    --color-accent-primary: #9f3a55;
+    --color-text-secondary: #c0c0c0;
+}
+
 body, html {
     margin: 0;
     padding: 0;
@@ -17,15 +22,9 @@ body, html {
     height: 100vh;
     width: 100vw;
     user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
 }
 
-/* Use border-box sizing for all elements for more predictable layouts */
-*, *:before, *:after {
-    box-sizing: border-box;
-}
+*, *:before, *:after { box-sizing: border-box; }
 
 #app-container {
     display: flex;
@@ -36,20 +35,16 @@ body, html {
     overflow: hidden;
 }
 
-/* Title Bar & Client Switch */
+/* --- Title Bar & Client Switch --- */
 #title-bar {
     height: 28px;
     background-color: #333333;
-    color: #cccccc;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 8px;
     -webkit-app-region: drag;
-    user-select: none;
     flex-shrink: 0;
-    border-top-left-radius: 7px;
-    border-top-right-radius: 7px;
 }
 
 #title-section {
@@ -62,6 +57,7 @@ body, html {
     font-weight: bold;
     font-size: 13px;
     margin-left: 5px;
+    color: #cccccc;
 }
 
 #client-switch, .paws-toggle-switch {
@@ -91,23 +87,11 @@ body, html {
     color: white;
 }
 
-.switch-btn:not(.active):hover {
-    background-color: #4f4f52;
-}
+.switch-btn:not(.active):hover { background-color: #4f4f52; }
+.switch-btn:disabled { color: #777; cursor: not-allowed; }
+.switch-btn:disabled:hover { background-color: transparent; }
 
-#switch-lazer:disabled {
-    color: #777;
-    cursor: not-allowed;
-}
-
-#switch-lazer:disabled:hover {
-    background-color: transparent;
-}
-
-#title-bar-btns {
-    -webkit-app-region: no-drag;
-}
-
+#title-bar-btns { -webkit-app-region: no-drag; }
 .title-bar-btn {
     background: none;
     border: none;
@@ -116,17 +100,11 @@ body, html {
     padding: 0 10px;
     line-height: 28px;
     cursor: pointer;
-    outline: none;
 }
-.title-bar-btn:hover {
-    background-color: #4f4f52;
-}
-#close-btn:hover {
-    background-color: #e81123;
-    color: white;
-}
+.title-bar-btn:hover { background-color: #4f4f52; }
+#close-btn:hover { background-color: #e81123; color: white; }
 
-/* Main Layout & Nav */
+/* --- Main Layout, Nav, and Content --- */
 #main-layout {
     position: relative;
     display: flex;
@@ -152,6 +130,7 @@ body, html {
     background-color: #3e3e42;
     border-radius: 8px;
     margin-bottom: 10px;
+    border: 1px solid transparent;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -159,47 +138,36 @@ body, html {
     font-size: 10px;
     cursor: pointer;
     text-align: center;
-    border: none;
-}
-.nav-item:hover {
-    background-color: #4f4f52;
-}
-#settings-btn {
-    margin-top: auto;
-    text-transform: lowercase;
-    font-weight: bold;
+    transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* --- FIX FOR ISSUE 1: Content Shifting --- */
+.nav-item:hover { background-color: #4f4f52; }
+
+.nav-item.active {
+    background-color: #4f4f52;
+    border-color: var(--color-accent-primary);
+    color: white;
+}
+.nav-item:disabled {
+    filter: grayscale(80%);
+    cursor: not-allowed;
+}
+
+#settings-btn { margin-top: auto; font-weight: bold; text-transform: lowercase;}
+
 #main-content {
-    position: relative; /* This is the key change */
     flex-grow: 1;
     background-color: #1e1e1e;
-    overflow: hidden; /* Changed from auto to hidden, as we fixed the cause of the scrollbar */
+    overflow: hidden;
     border-bottom-right-radius: 7px;
     border-top-left-radius: 12px; 
 }
 
-#plugin-iframe, #welcome-message {
-    /* Make both elements occupy the same space */
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+#content-iframe {
+    background-color: transparent;
 }
 
-#welcome-message {
-    /* Apply the desired padding to the content itself, not the container */
-    padding: 46px;
-    display: flex; /* Optional: for better centering of welcome text */
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-/* --- END OF FIX --- */
-
-/* Resize Button */
+/* --- Resize Button --- */
 #resize-btn {
     position: absolute;
     right: 5px;
@@ -213,202 +181,10 @@ body, html {
     color: #d4d4d4;
     cursor: pointer;
     z-index: 100;
-    font-size: 16px;
-    font-weight: bold;
     display: flex; 
     align-items: center;
     justify-content: center;
     -webkit-app-region: no-drag;
     transition: background-color 0.2s;
 }
-
-#resize-btn:hover {
-    background-color: #4f4f52;
-}
-
-/* Settings Modal Styles */
-#settings-modal-backdrop, #modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-#settings-modal-content, .modal-content {
-    background-color: #2a2a2e;
-    color: #e0e0e0;
-    padding: 25px;
-    border-radius: 8px;
-    /* --- FIX FOR ISSUE 2: Responsive Modal Width --- */
-    width: 90%;
-    max-width: 550px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-#settings-modal-content h2, .modal-content h2 {
-    margin-top: 0;
-    text-align: center;
-    color: var(--color-text-secondary);
-    text-transform: lowercase;
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.settings-group {
-    margin-bottom: 20px;
-}
-
-.settings-group > label:not(.settings-toggle-label) {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #c0c0c0;
-}
-
-.settings-input-container {
-    display: flex;
-    gap: 10px;
-}
-
-.settings-input {
-    flex-grow: 1;
-    padding: 8px;
-    background-color: #1e1e1e;
-    border: 1px solid #444;
-    border-radius: 5px;
-    color: #d4d4d4;
-    font-family: inherit;
-}
-
-.settings-browse-btn {
-    padding: 8px 15px;
-    background-color: #4f4f52;
-    border: none;
-    border-radius: 5px;
-    color: white;
-    cursor: pointer;
-    transition: filter 0.2s;
-}
-
-.settings-browse-btn:hover {
-    filter: brightness(1.15);
-}
-
-#settings-modal-actions, .modal-actions {
-    text-align: right;
-    margin-top: 25px;
-}
-
-#settings-close-btn, #approve-save-btn {
-    background-color: var(--color-accent-primary);
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: filter 0.2s;
-}
-
-#settings-close-btn:hover, #approve-save-btn:hover {
-    filter: brightness(1.15);
-}
-
-.settings-divider {
-    height: 1px;
-    background-color: #444;
-    margin: 25px 0;
-}
-
-.settings-toggle-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    cursor: pointer;
-    font-weight: bold;
-    color: #c0c0c0;
-}
-
-#settings-resize-toggle-container {
-    margin-top: 10px;
-    display: flex;
-    justify-content: center;
-}
-
-/* Plugin Approval Modal Specifics */
-.plugin-list {
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid #444;
-    padding: 10px;
-    margin-bottom: 15px;
-}
-
-.plugin-item label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 5px;
-}
-.plugin-item label:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-.plugin-item input[type="checkbox"] {
-    margin-right: 15px;
-    width: 18px;
-    height: 18px;
-    accent-color: var(--color-accent-primary);
-}
-.plugin-info p {
-    font-size: 0.9em;
-    margin: 2px 0 0 0;
-    color: #b0b0b0;
-}
-
-/* Test Controls */
-#test-controls-container {
-    margin-top: 40px;
-    padding: 20px;
-    background-color: rgba(0,0,0,0.2);
-    border-radius: 8px;
-    border: 1px solid #444;
-    text-align: center;
-}
-
-#test-controls-container h3 {
-    margin-top: 0;
-    color: var(--color-text-secondary);
-}
-
-.test-instructions {
-    font-size: 0.9em;
-    color: #b0b0b0;
-    max-width: 400px;
-    margin: 10px auto;
-}
-
-.test-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-#test-results {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #1e1e1e;
-    border-radius: 5px;
-    min-height: 20px;
-    font-family: monospace;
-    white-space: pre-wrap;
-    word-break: break-all;
-}
+#resize-btn:hover { background-color: #4f4f52; }

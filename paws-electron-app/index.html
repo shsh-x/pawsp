@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://localhost:5088; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-src paws-plugin:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://localhost:5088; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src paws-plugin: paws-app:;">
     <title>Paws</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="ui-kit.css">
@@ -25,30 +25,17 @@
 
         <div id="main-layout">
             <div id="nav-bar">
+                 <!-- Plugin buttons will be dynamically inserted here -->
                 <button id="settings-btn" class="nav-item">settings</button>
             </div>
 
             <div id="main-content">
-                <iframe id="plugin-iframe" sandbox="allow-scripts allow-forms allow-popups" style="width:100%; height:100%; border:none;"></iframe>
-                
-                <div id="welcome-message">
-                    <h1>Welcome to Paws!</h1>
-                    <p>Select a module from the sidebar to get started.</p>
-
-                    <!-- NEW: Test Controls Area -->
-                    <div id="test-controls-container">
-                        <h3>Lazer Database Tests</h3>
-                        <p class="test-instructions">Ensure your osu!(lazer) path is set in settings. For the write test, **make sure osu!lazer is completely closed**.</p>
-                        <div class="test-buttons">
-                            <button id="test-read-btn" class="paws-button secondary">Test Read Access</button>
-                            <button id="test-write-btn" class="paws-button secondary">Test Write Access</button>
-                        </div>
-                        <div id="test-results"></div>
-                    </div>
-                </div>
+                <iframe id="content-iframe" sandbox="allow-scripts allow-forms" style="width:100%; height:100%; border:none;"></iframe>
             </div>
+
             <button id="resize-btn" title="Toggle Compact View"><</button>
         </div>
     </div>
     <script src="renderer.js"></script>
 </body>
+</html>

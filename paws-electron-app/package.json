@@ -1,6 +1,6 @@
 {
   "name": "paws-electron-app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Paws - A multitool for osu!",
   "main": "main.js",
   "scripts": {
@@ -17,24 +17,24 @@
   "author": "shxsha",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^36.2.0",
+    "electron": "^31.0.1",
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
-    "electron-log": "^5.4.0",
-    "electron-store": "^10.0.1",
-    "electron-updater": "^6.3.1"
+    "electron-log": "^5.1.5",
+    "electron-store": "^9.0.0",
+    "electron-updater": "^6.2.1"
   },
   "build": {
-    "appId": "com.shshx.osupaws",
-    "productName": "Paws smol",
+    "appId": "com.shshx.paws",
+    "productName": "Paws",
     "directories": {
       "output": "dist_electron"
     },
     "files": [
       "**/*",
-      "!Paws.DotNet/",
-      "!Paws.DotNet/**/*"
+      "!../Paws.DotNet/",
+      "!../Paws.DotNet/**/*"
     ],
     "extraResources": [
       {
@@ -45,19 +45,18 @@
         ]
       },
       {
-        "from": "../Paws.DotNet/Paws.Host/bin/Release/net8.0/",
-        "to": "Paws.DotNet/Paws.Host",
+        "from": "../Paws.DotNet/Paws.Host/bin/Release/net8.0/win-x64/publish/",
+        "to": "Paws.DotNet",
         "filter": [
           "**/*",
           "!*.pdb"
         ]
       },
       {
-        "from": "../Paws.DotNet/Paws.Host/bin/Release/net8.0/plugins/",
-        "to": "Paws.DotNet/Paws.Host/plugins",
+        "from": "../Paws.DotNet/Paws.Host/bin/Release/net8.0/win-x64/publish/plugins",
+        "to": "plugins",
         "filter": [
-          "**/*",
-          "!*.pdb"
+          "**/*"
         ]
       }
     ],
