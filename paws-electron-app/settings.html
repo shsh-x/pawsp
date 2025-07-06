@@ -3,18 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Paws Settings</title>
-    
-    <!-- 
-      THE FIX: Use absolute paths with our custom protocol.
-      This tells the browser the exact location of each resource,
-      instead of letting it guess a relative path.
-    -->
     <link rel="stylesheet" href="paws-app://settings-style.css">
     <link rel="stylesheet" href="paws-app://ui-kit.css">
 </head>
 <body>
     <div class="settings-container">
-        <!-- The body of the HTML remains exactly the same. -->
         <div class="header">
             <div class="tabs">
                 <button class="tab-btn active" data-tab="general">Settings</button>
@@ -27,7 +20,7 @@
             <div id="tab-general" class="tab-content active">
                 <div class="settings-group">
                     <h2>Game Paths</h2>
-                    <p>Set the installation paths for your osu! clients.</p>
+                    <p>Set the installation paths for your osu! clients. This is required for most plugins to function.</p>
                     <label for="stable-path-input">osu!(stable) Path</label>
                     <div class="input-with-button">
                         <input type="text" id="stable-path-input" placeholder="Path to osu!(stable) installation" readonly>
@@ -39,11 +32,32 @@
                         <button id="lazer-browse-btn" class="paws-button secondary">Browse...</button>
                     </div>
                 </div>
+
                 <div class="settings-divider"></div>
+
                 <div class="settings-group">
-                    <h2>Appearance</h2>
+                    <h2>Interface</h2>
+                    <p>Customize where and how you interact with Paws controls.</p>
+                    
                     <div class="settings-toggle-row">
-                        <span>Window resize control</span>
+                        <span>Client mode switch location</span>
+                        <div class="paws-toggle-switch" id="mode-location-switch">
+                            <button class="switch-btn" data-value="titlebar">Title Bar</button>
+                            <button class="switch-btn" data-value="settings">Settings</button>
+                        </div>
+                    </div>
+                    <div id="settings-mode-controls" style="display: none;">
+                        <div class="settings-toggle-row">
+                            <span>Client mode</span>
+                            <div class="paws-toggle-switch" id="mode-select-switch">
+                                <button class="switch-btn" data-mode="stable">Stable</button>
+                                <button class="switch-btn" data-mode="lazer">Lazer</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-toggle-row">
+                        <span>Window resize control location</span>
                         <div class="paws-toggle-switch" id="resize-location-switch">
                             <button class="switch-btn" data-value="edge">Edge</button>
                             <button class="switch-btn" data-value="settings">Settings</button>
@@ -70,7 +84,7 @@
                         New plugins have been detected! Approve them below and restart Paws to use them.
                     </div>
                     <div id="installed-plugins-list" class="plugin-list-container">
-                        <div class="list-placeholder">No plugins installed.</div>
+                        <div class="list-placeholder">Loading...</div>
                     </div>
                      <button id="restart-btn" class="paws-button primary" style="display: none; width: 100%; margin-top: 15px;">Save & Restart</button>
                 </div>
@@ -84,8 +98,6 @@
             </div>
         </div>
     </div>
-    
-    <!-- THE FIX: Use absolute paths here as well. -->
     <script src="paws-app://paws-frontend-api.js"></script>
     <script src="paws-app://settings-renderer.js"></script>
 </body>

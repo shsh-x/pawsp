@@ -170,18 +170,19 @@ body, html {
 /* --- Resize Button --- */
 #resize-btn {
     position: absolute;
-    right: 5px;
+    right: 0px;
     top: 50%;
     transform: translateY(-50%);
-    width: 20px;
-    height: 60px;
+    width: 24px;
+    height: 64px;
     background-color: #3e3e42;
-    border: 1px solid #555;
-    border-radius: 5px;
+    border: none;
+    border-radius: 5px 0 0 5px;
     color: #d4d4d4;
     cursor: pointer;
     z-index: 100;
-    display: flex; 
+    display: flex
+;
     align-items: center;
     justify-content: center;
     -webkit-app-region: no-drag;
