@@ -24,7 +24,7 @@ export const startBackend = (): void => {
 				"net8.0",
 				backendExecutableName
 			)
-		: join(dirname(app.getPath("exe")), "Paws.DotNet", backendExecutableName);
+		: join(dirname(app.getPath("exe")), "resources", "Paws.Backend", backendExecutableName);
 
 	if (!existsSync(backendExecutable)) {
 		const errorMsg =
