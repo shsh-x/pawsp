@@ -3,6 +3,7 @@
   "include": [
     "src/main/*.d.ts",
     "src/preload/*.d.ts",
+    "src/preload/ipc/*.ipc.ts",
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.vue",
     "src/renderer/splash/*.ts",

@@ -1,0 +1,14 @@
+.button {
+	width: 56px;
+	height: 56px;
+	background-color: var(--paws-color-bg-dark);
+	border: unset;
+	border-radius: 16px;
+	cursor: pointer;
+	transition: background-color 200ms;
+	font-size: 11px;
+
+	&:hover {
+		background-color: #484848;
+	}
+}
