@@ -1,0 +1,10 @@
+.content {
+	flex: 1;
+	height: 100%;
+	background-color: var(--paws-color-bg-dark);
+	border-radius: 16px 0 0 0;
+}
+
+.tmp {
+	margin: 12px;
+}

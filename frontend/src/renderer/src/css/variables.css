@@ -1,0 +1,15 @@
+:root {
+	--font-generic: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+	--paws-color-accent-primary: #b4355d;
+	--paws-color-accent-secondary: #62223e;
+	--paws-color-text-primary: #ffffff;
+	--paws-color-text-secondary: #d8d8d8;
+	--paws-color-text-on-accent: #ffffff;
+	--paws-color-success: #4caf50;
+	--paws-color-warning: #ffc107;
+	--paws-color-error: #f44336;
+	--paws-color-bg-darkest: #222222;
+	--paws-color-bg-dark: #262626;
+	--paws-color-bg-lighter: #383838;
+}

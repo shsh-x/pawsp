@@ -8,7 +8,18 @@ import unusedImports from "eslint-plugin-unused-imports";
 import pathAlias from "eslint-plugin-path-alias";
 
 export default tseslint.config(
-	{ ignores: [".idea", ".vscode", "build", "**/node_modules", "**/dist", "**/out", "ui-kit"] },
+	{
+		ignores: [
+			".idea",
+			".vscode",
+			"build",
+			"**/node_modules",
+			"**/dist",
+			"**/out",
+			"**/*.js",
+			"ui-kit"
+		]
+	},
 	tseslint.configs.recommended,
 	eslintPluginVue.configs["flat/recommended"],
 	{
@@ -102,18 +113,19 @@ export default tseslint.config(
 			"prefer-const": "error",
 			"prefer-spread": "error",
 
-			// Plugin Rules
+			// Plugin rules.
 			"simple-import-sort/imports": "error",
 			"simple-import-sort/exports": "error",
 			"unused-imports/no-unused-imports": "error",
-			"path-alias/no-relative": "error"
+			"path-alias/no-relative": "error",
+			"prettier/prettier": [
+				"error",
+				{},
+				{
+					usePrettierrc: false
+				}
+			]
 		}
 	},
-	// {
-	// 	files: ["**/*.js"],
-	// 	rules: {
-	//
-	// 	}
-	// },
 	eslintConfigPrettier
 );

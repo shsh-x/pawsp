@@ -1,0 +1,22 @@
+.sidebar {
+	--spacing: 12px;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	width: 80px;
+	height: calc(100% - (var(--spacing) * 2));
+	margin-top: 14px;
+	padding: 0 var(--spacing);
+	box-sizing: border-box;
+}
+
+.pluginList {
+	display: flex;
+	flex-direction: column;
+	gap: 11px;
+}
+
+.settings {
+	margin-top: 1rem;
+}

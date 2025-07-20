@@ -6,6 +6,7 @@ build
 .eslintcache
 *.log*
 ui-kit
-.vscode
+.vscode/*
+!.vscode/extensions.json
 .idea
 resources/Paws.Backend

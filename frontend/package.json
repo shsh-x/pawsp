@@ -15,7 +15,7 @@
 		"dev": "electron-vite dev",
 		"build": "npm run typecheck && electron-vite build",
 		"postinstall": "electron-builder install-app-deps",
-    "build:backend": "node copy-backend.js",
+		"build:backend": "node copy-backend.js",
 		"build:unpack": "npm run build:backend && npm run build && electron-builder --dir",
 		"build:win": "npm run build:backend && npm run build && electron-builder --win",
 		"build:mac": "npm run build:backend && npm run build && electron-builder --mac",
